@@ -220,13 +220,6 @@ static unsigned char LinearToALaw(int pcm)
 }
 ```
 
-**编码过程数学描述**：
-1. **输入缩放**：$s = \text{PCM\_16bit} \gg 3$（保留 13 bit 动态范围）
-2. **取幅度**：$m = |s|$（负数取 $-s-1$，一补数表示）
-3. **确定段落**：$p = \arg \min_i \{ \text{segmentEnd}[i] \geq m \}$
-4. **提取尾数**：$q = \begin{cases} (m \gg 1) \& 0xF, & p < 2 \\ (m \gg p) \& 0xF, & p \geq 2 \end{cases}$
-5. **组装输出**：$\text{code} = ((p \ll 4) \;|\; q) \oplus \text{mask}$
-
 ### 3.5 A-law 解码器核心代码解析
 
 ```c
@@ -254,14 +247,6 @@ static int ALawToLinear(unsigned char inputCode)
     return (code & 0x0080U) ? (int)sample : (int)(-sample);  // 恢复符号
 }
 ```
-
-**解码过程数学描述**：
-1. **反异或**：$c' = c \oplus 0\text{x}55$
-2. **提取尾数**：$q = (c' \& 0\text{x}0F) \ll 4$
-3. **提取段落**：$p = (c' \& 0\text{x}70) \gg 4$
-4. **重构线性值**：
-   $$s' = \begin{cases} q + 8, & p = 0 \\ q + 0\text{x}108, & p = 1 \\ (q + 0\text{x}108) \ll (p-1), & p \geq 2 \end{cases}$$
-5. **恢复符号**：$\text{PCM} = \text{sgn}(c') \cdot s'$
 
 ### 3.6 μ-law 编码器核心代码解析
 
